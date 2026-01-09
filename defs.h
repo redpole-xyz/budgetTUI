@@ -3,6 +3,7 @@
 
 #define DATA_PATH "~/.local/share/budgetTUI/"
 #define LEDGER_FILE "ledger.dat"
+#define SWAP_FILE "ledger.swap"
 #define RECEIPT_FOLDER "receipts"
 
 typedef struct {
@@ -12,6 +13,7 @@ typedef struct {
     struct tm date;
     char * desc;
     char * receipt;
+    size_t size;
     char strings[];
 } Entry;
 
@@ -22,6 +24,7 @@ typedef struct LedgerNode {
 } LedgerNode;
 
 typedef struct {
+    int node_count;
     LedgerNode *head;
     LedgerNode *tail;
     LedgerNode *curr;

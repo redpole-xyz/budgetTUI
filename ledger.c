@@ -9,12 +9,30 @@
 // new entry can have pointers to desc / receipt wherever 
 // desc & receipt are formatted & realloced in ledger_add
 
-void ledger_open(char * path, Ledger * ledger) {
-    return 0;
+void ledger_open(const char * path, Ledger * ledger) {
+    return;
 }
 
-void ledger_close(char * path, Ledger * ledger) {
-    return 0;
+void ledger_close(const char * path, const char * swap_path, Ledger * ledger) {
+    FILE *fptr = fopen(swap_path, "wb");
+    if (fptr == NULL) {
+        log_err("unable to open file for write.");
+    }
+
+    LedgerNode *node = ledger->head;
+    int i = 0;
+    while (node != NULL) {
+        fwrite(node->entry, node->entry->size, 1, fptr); 
+        node = node->next;
+        ++i;
+    }
+    fclose(fptr);
+    if (i != ledger->node_count) {
+        log_err("ledger size mismatch (in ledger_close)");
+    }
+    if (rename(swap_path, path)) {
+        log_err("unable to rename swapfile");
+    }
 }
 
 // Make sure all data within entry is consecutive to ease saving
@@ -25,6 +43,7 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     int str_size = (int)(desc_size + receipt_size);
     Entry * ret_entry = (Entry*)calloc(1, (sizeof(Entry)) + str_size); 
     *ret_entry = entry;
+    ret_entry->size = str_size + sizeof(Entry);
     // Copy desc into ret_entry
     int i = 0;
     while (entry.desc != NULL) {
@@ -83,11 +102,19 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
         comp_node = comp_node->next;
         comp_time = mktime(&(comp_node->entry->date));
     }
+    ledger->node_count += 1;
+    if (ledger->node_count < 0) {
+        log_err("node_count less than 0");
+    }
     return ledger_node;
 }
 
 void ledger_del(Ledger *ledger, LedgerNode *node) {
     free(node->entry);
+    ledger->node_count -= 1;
+    if (ledger->node_count < 0) {
+        log_err("node_count less than 0");
+    }
     if (ledger->head == ledger->tail) {
         if (ledger->head != node || ledger->tail != node) {
             log_err("node not in or out of sync of list");
