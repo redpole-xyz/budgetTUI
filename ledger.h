@@ -14,4 +14,4 @@ int ledger_close(char * path, Ledger * ledger);
 LedgerNode * ledger_add(Ledger *ledger, Entry entry);
 // frees entry and ledger node
 // updates head, tail, next, prev pointers as needed 
-int ledger_del(Ledger *ledger, LedgerNode *node);
+void ledger_del(Ledger *ledger, LedgerNode *node);

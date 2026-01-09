@@ -4,6 +4,11 @@
 #include "defs.h"
 #include "log_err.h"
 
+// doubly linked list
+// ALL data for entry is actually within the struct once added to ledger
+// new entry can have pointers to desc / receipt wherever 
+// desc & receipt are formatted & realloced in ledger_add
+
 int ledger_open(char * path, Ledger * ledger) {
     return 0;
 }
@@ -81,7 +86,32 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     return ledger_node;
 }
 
-int ledger_del(Ledger *ledger, LedgerNode *node) {
-    return 0;
+void ledger_del(Ledger *ledger, LedgerNode *node) {
+    free(node->entry);
+    if (ledger->head == ledger->tail) {
+        if (ledger->head != node || ledger->tail != node) {
+            log_err("node not in or out of sync of list");
+        }
+        ledger->head = NULL;
+        ledger->tail = NULL;
+        free(node);
+        return;
+    }
+    if (ledger->head == node) {
+        ledger->head = node->next;
+        node->next->prev = NULL;
+        free(node);
+        return;
+    }
+    if (ledger->tail == node) {
+        ledger->tail = node->prev;
+        node->prev->next = NULL;
+        free(node);
+        return;
+    }
+    node->next->prev = node->prev;
+    node->prev->next = node->next;
+    free(node);
+    return;
 }
 
