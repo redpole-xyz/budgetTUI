@@ -1,6 +1,5 @@
 #include "ledger.h"
 
-int main(int argc, char **argv) {
-    test();
+int main(/* int argc, char **argv */) {
     return 0;
 }

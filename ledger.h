@@ -1,3 +1,17 @@
 #pragma once
+#include "defs.h"
 
-void test();
+// reads ledger.dat file from path
+// ledger should be calloc'd in main
+int ledger_open(char * path, Ledger * ledger);
+// saves ledger from memory into ledger.dat
+// iterates thru ledger_del to free everything
+int ledger_close(char * path, Ledger * ledger);
+// allocs new ledger item with entry
+// updates head, tail, next, prev pointers as needed 
+// returns pointer to new entry item
+// returns NULL on failure
+Entry * ledger_add(Entry entry);
+// frees entry and ledger node
+// updates head, tail, next, prev pointers as needed 
+Entry * ledger_del(Entry entry);
