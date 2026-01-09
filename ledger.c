@@ -8,34 +8,6 @@
 // ALL data for entry is actually within the struct once added to ledger
 // new entry can have pointers to desc / receipt wherever 
 // desc & receipt are formatted & realloced in ledger_add
-
-void ledger_open(const char * path, Ledger * ledger) {
-    return;
-}
-
-void ledger_close(const char * path, const char * swap_path, Ledger * ledger) {
-    FILE *fptr = fopen(swap_path, "wb");
-    if (fptr == NULL) {
-        log_err("unable to open file for write.");
-    }
-
-    LedgerNode *node = ledger->head;
-    int i = 0;
-    while (node != NULL) {
-        fwrite(node->entry, node->entry->size, 1, fptr); 
-        node = node->next;
-        ++i;
-    }
-    fclose(fptr);
-    if (i != ledger->node_count) {
-        log_err("ledger size mismatch (in ledger_close)");
-    }
-    if (rename(swap_path, path)) {
-        log_err("unable to rename swapfile");
-    }
-}
-
-// Make sure all data within entry is consecutive to ease saving
 // Sort by date (newest@head oldest@tail)
 LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     size_t desc_size = strlen(entry.desc) + 1;
@@ -141,4 +113,63 @@ void ledger_del(Ledger *ledger, LedgerNode *node) {
     free(node);
     return;
 }
+
+void ledger_open(const char * path, Ledger * ledger) {
+    FILE *fptr = fopen(path, "rb");
+    if (fptr == NULL) {
+        log_err("unable to open file for read.");
+    }
+
+    int bytes_read = -1;
+    Entry entry_buf = {0};
+    char * desc = (char *)malloc(sizeof(char)*1024);
+    int desc_size;
+    char * receipt = (char *)malloc(sizeof(char)*1024);
+    int receipt_size;
+    while(bytes_read != 0) {
+        bytes_read = fread(&entry_buf, sizeof(Entry), 1, fptr);
+        if (bytes_read != sizeof(Entry) || 0) {
+            log_err("unexpected number of bytes reading entry");
+        } else if (bytes_read == 0) {
+            break;
+        }
+        desc_size = entry_buf.receipt - entry_buf.desc;
+        bytes_read = fread(desc, sizeof(char), desc_size, fptr);
+        if (bytes_read != desc_size || 0) {
+            log_err("unexpected number of bytes reading entry.desc");
+        }
+        receipt_size = entry_buf.size - desc_size - sizeof(Entry);
+        bytes_read = fread(receipt, sizeof(char), receipt_size, fptr);
+        if (bytes_read != receipt_size || 0) {
+            log_err("unexpected number of bytes reading receipt.desc");
+        }
+        ledger_add(ledger, entry_buf);
+    }
+    free(desc);
+    free(receipt);
+}
+
+void ledger_close(const char * path, const char * swap_path, Ledger * ledger) {
+    FILE *fptr = fopen(swap_path, "wb");
+    if (fptr == NULL) {
+        log_err("unable to open file for write.");
+    }
+
+    LedgerNode *node = ledger->head;
+    int i = 0;
+    while (node != NULL) {
+        fwrite(node->entry, node->entry->size, 1, fptr); 
+        ledger_del(ledger, node);
+        node = ledger->head;
+        ++i;
+    }
+    fclose(fptr);
+    if (i != ledger->node_count) {
+        log_err("ledger size mismatch (in ledger_close)");
+    }
+    if (rename(swap_path, path)) {
+        log_err("unable to rename swapfile");
+    }
+}
+
 
