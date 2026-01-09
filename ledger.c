@@ -58,8 +58,9 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     LedgerNode *comp_node = ledger->head;
 
     if (comp_node == NULL) { // if head is null
-        ledger->head->next = ledger_node;
-        ledger->tail->prev = ledger_node;
+        ledger->head = ledger_node;
+        ledger->tail = ledger_node;
+        ledger->curr = ledger_node;
     }
 
     time_t new_time = mktime(&entry.date);
@@ -80,7 +81,7 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     return ledger_node;
 }
 
-Entry * ledger_del(Ledger *ledger, Entry entry) {
+int ledger_del(Ledger *ledger, LedgerNode *node) {
     return 0;
 }
 

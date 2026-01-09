@@ -11,7 +11,7 @@ int ledger_close(char * path, Ledger * ledger);
 // updates head, tail, next, prev pointers as needed 
 // returns pointer to new entry item
 // returns NULL on failure
-Entry * ledger_add(Entry entry);
+LedgerNode * ledger_add(Ledger *ledger, Entry entry);
 // frees entry and ledger node
 // updates head, tail, next, prev pointers as needed 
-Entry * ledger_del(Entry entry);
+int ledger_del(Ledger *ledger, LedgerNode *node);
