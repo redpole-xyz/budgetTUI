@@ -9,11 +9,11 @@
 // new entry can have pointers to desc / receipt wherever 
 // desc & receipt are formatted & realloced in ledger_add
 
-int ledger_open(char * path, Ledger * ledger) {
+void ledger_open(char * path, Ledger * ledger) {
     return 0;
 }
 
-int ledger_close(char * path, Ledger * ledger) {
+void ledger_close(char * path, Ledger * ledger) {
     return 0;
 }
 
