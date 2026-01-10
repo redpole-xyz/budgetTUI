@@ -1,8 +1,13 @@
+#define _XOPEN_SOURCE
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
+#include "defs.h"
 #include "log_err.h"
-#include "new_entry"
+#include "print_dat.h"
+#include "ledger.h"
 
 typedef enum {
     CMD_QUIT,
@@ -19,7 +24,12 @@ CommandParse parse_command(char *cmd) {
     return CMD_UNKNOWN;
 }
 
-bool menu() {
+void new_entry(Ledger *ledger);
+
+bool menu(Ledger *ledger) {
+    printf("\nMenu:\n");
+    printf("create new entry (n/new)\n");
+    printf("exit program     (q/quit)\n");
     char str[256];
     if(fgets(str, 256, stdin) == NULL) {
         log_err("failed to get menu input");
@@ -30,7 +40,7 @@ bool menu() {
             return false;
             break;
         case CMD_NEW_ENTRY: 
-            new_entry();
+            new_entry(ledger);
             return true;
             break;
         default:
@@ -40,7 +50,7 @@ bool menu() {
 }
 
 
-new_entry() {
+void new_entry(Ledger *ledger) {
     char * str = (char *)calloc(256, sizeof(char));
     Entry *entry = (Entry *)calloc(1, sizeof(Entry));
     printf("\nNew Entry\n");
@@ -57,7 +67,7 @@ new_entry() {
     }
     // Get category
     while (1) {
-        printf("Catagory menu\n"); 
+        printf("Category menu\n"); 
         printf("0: Housing\n");
         printf("1: Groceries\n");
         printf("2: Transit\n");
@@ -75,8 +85,7 @@ new_entry() {
         }
     }
     // Get date
-    char * date_str;
-    while (success != true) {
+    while (1) {
         printf("Press ENTER for today's date\n");
         printf("Format: YY-MM-DD (dashes optional)\n");
         if (fgets(str, 256, stdin) == NULL) {
@@ -84,21 +93,21 @@ new_entry() {
         }
         time_t t = time(NULL);
         entry->date = *localtime(&t);
-        if (date_str == NULL) {
+        if (str == NULL) {
             break;
         }
-        if (strptime(date_str, "%d", &entry->date) != NULL) {
+        if (strptime(str, "%d", &entry->date) != NULL) {
             break;
         }
-        if (strptime(date_str, "%Y-%m-%d", &entry->date) != NULL) {
+        if (strptime(str, "%Y-%m-%d", &entry->date) != NULL) {
             break;
         } 
-        if (strptime(date_str, "%Y%m%d", &entry->date) != NULL) {
+        if (strptime(str, "%Y%m%d", &entry->date) != NULL) {
             break;
         } 
-        if (date_str[0] == 'q') {
+        if (str[0] == 'q') {
             printf("discarding entry\n");
-            return NULL;
+            return;
         }
         printf("failed to parse string\n");
     }
@@ -108,6 +117,8 @@ new_entry() {
         log_err("bad input");
     }
     entry->desc = str;
-    ledger_add(entry);
+    LedgerNode *node = ledger_add(ledger, *entry);
+    print_entry(node->entry);
     free(str);
+    free(entry);
 }

@@ -8,7 +8,7 @@
 
 typedef struct {
     int account;
-    int catagory;
+    int category;
     double amount;
     struct tm date;
     char * desc;
