@@ -28,7 +28,7 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
         if (i > str_size) {
             log_err("Allocation mismatch while copying entry.desc to ret_entry->desc");
         }
-        if (entry.desc[i] == '\0' || '\n') {
+        if (entry.desc[i] == '\0' || entry.desc[i] == '\n') {
             ret_entry->strings[i] = '\0';
             ++i;
             break;

@@ -13,7 +13,8 @@ typedef enum {
     CMD_QUIT,
     CMD_NEW_ENTRY,
     CMD_DATAVIEW,
-    CMD_UNKNOWN
+    CMD_UNKNOWN,
+    CMD_LIST_ALL
 } CommandParse;
 
 CommandParse parse_command(char *cmd) {
@@ -21,10 +22,13 @@ CommandParse parse_command(char *cmd) {
     if (strcmp(cmd, "q\n") == 0) return CMD_QUIT;
     if (strcmp(cmd, "new\n") == 0) return CMD_NEW_ENTRY;
     if (strcmp(cmd, "n\n") == 0) return CMD_NEW_ENTRY;
+    if (strcmp(cmd, "list\n") == 0) return CMD_LIST_ALL;
+    if (strcmp(cmd, "ls\n") == 0) return CMD_LIST_ALL;
     return CMD_UNKNOWN;
 }
 
 void new_entry(Ledger *ledger);
+void list_entries(Ledger *ledger);
 
 bool menu(Ledger *ledger) {
     printf("\033[H\033[J");
@@ -44,12 +48,33 @@ bool menu(Ledger *ledger) {
             new_entry(ledger);
             return true;
             break;
+        case CMD_LIST_ALL:
+            list_entries(ledger);
+            return true;
+            break;
         default:
             printf("Unrecognized command\n");
             return true;
     }
 }
 
+void list_entries(Ledger *ledger) {
+    printf("\033[H\033[J");
+    printf("| ### | Date       | Category  | Amount   | Description\n");
+    printf("|-----|------------|-----------|----------|-------------\n");
+    ledger->curr = ledger -> head;
+    int i = 0;
+    while(ledger->curr != NULL && i < 100) {
+        print_entry_line(ledger->curr->entry, i);
+        ledger->curr = ledger->curr->next;
+        i++;
+    } 
+    if (i >= 100) {
+        printf("\n Previous(p) Next(n)\n");
+        printf("TODO!!!");
+    }
+    getchar();
+}
 
 void new_entry(Ledger *ledger) {
     char * str = (char *)calloc(256, sizeof(char));
@@ -73,7 +98,7 @@ void new_entry(Ledger *ledger) {
         printf("0: Housing\n");
         printf("1: Groceries\n");
         printf("2: Transit\n");
-        printf("3: Subscriptions\n");
+        printf("3: Recurring\n");
         printf("4: Shopping\n");
         printf("5: Social\n");
         printf("6: Projects\n");
@@ -132,7 +157,9 @@ void new_entry(Ledger *ledger) {
     } else {
         printf("discarded entry!\n");
         printf("Press enter to continue");
-        getchar();
+        if (fgets(buf, 256, stdin) == NULL) {
+            log_err("bad input");
+        }
     }
     free(str);
 }
