@@ -27,7 +27,8 @@ CommandParse parse_command(char *cmd) {
 void new_entry(Ledger *ledger);
 
 bool menu(Ledger *ledger) {
-    printf("\nMenu:\n");
+    printf("\033[H\033[J");
+    printf("Menu:\n");
     printf("create new entry (n/new)\n");
     printf("exit program     (q/quit)\n");
     char str[256];
@@ -52,16 +53,17 @@ bool menu(Ledger *ledger) {
 
 void new_entry(Ledger *ledger) {
     char * str = (char *)calloc(256, sizeof(char));
-    Entry *entry = (Entry *)calloc(1, sizeof(Entry));
-    printf("\nNew Entry\n");
+    Entry entry = {0};
+    printf("\033[H\033[J");
+    printf("New Entry\n");
     // Get amount
     while (1) {
         printf("AMOUNT: $");
         if (fgets(str, 256, stdin) == NULL) {
             log_err("bad input");
         }
-        entry->amount = strtod(str, NULL);
-        if (entry->amount >= 0.01 && entry->amount < 100000000000) {
+        entry.amount = strtod(str, NULL);
+        if (entry.amount >= 0.01 && entry.amount < 100000000000) {
             break;
         }
     }
@@ -76,9 +78,9 @@ void new_entry(Ledger *ledger) {
         printf("5: Social\n");
         printf("6: Projects\n");
         printf("Select a category: \n");
-        scanf("%d", &entry->category);
+        scanf("%d", &entry.category);
         getchar();
-        if (entry->category >= 0 && entry->category <= 6) {
+        if (entry.category >= 0 && entry.category <= 6) {
             break;
         } else {
             printf("Invalid entry\n");
@@ -92,17 +94,17 @@ void new_entry(Ledger *ledger) {
             log_err("bad input");
         }
         time_t t = time(NULL);
-        entry->date = *localtime(&t);
-        if (str == NULL) {
+        entry.date = *localtime(&t);
+        if (str[0] == '\n') {
             break;
         }
-        if (strptime(str, "%d", &entry->date) != NULL) {
+        if (strptime(str, "%d", &entry.date) != NULL) {
             break;
         }
-        if (strptime(str, "%Y-%m-%d", &entry->date) != NULL) {
+        if (strptime(str, "%Y-%m-%d", &entry.date) != NULL) {
             break;
         } 
-        if (strptime(str, "%Y%m%d", &entry->date) != NULL) {
+        if (strptime(str, "%Y%m%d", &entry.date) != NULL) {
             break;
         } 
         if (str[0] == 'q') {
@@ -116,9 +118,21 @@ void new_entry(Ledger *ledger) {
     if (fgets(str, 256, stdin) == NULL) {
         log_err("bad input");
     }
-    entry->desc = str;
-    LedgerNode *node = ledger_add(ledger, *entry);
-    print_entry(node->entry);
+    entry.desc = str;
+    printf("\033[H\033[J");
+    printf("Confirm Entry?\n\n");
+    print_entry(&entry);
+    printf("Enter q to discard: ");
+    char buf[256];
+    if (fgets(buf, 256, stdin) == NULL) {
+        log_err("bad input");
+    }
+    if (buf[0] != 'q') {
+        ledger_add(ledger, entry);
+    } else {
+        printf("discarded entry!\n");
+        printf("Press enter to continue");
+        getchar();
+    }
     free(str);
-    free(entry);
 }

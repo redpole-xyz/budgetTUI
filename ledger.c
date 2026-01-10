@@ -10,8 +10,14 @@
 // desc & receipt are formatted & realloced in ledger_add
 // Sort by date (newest@head oldest@tail)
 LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
-    size_t desc_size = strlen(entry.desc) + 1;
-    size_t receipt_size = strlen(entry.receipt) + 1;
+    size_t desc_size = 0;
+    size_t receipt_size = 0;
+    if (entry.desc != NULL) {
+        desc_size = strlen(entry.desc) + 1;
+    }
+    if (entry.receipt != NULL) {
+        receipt_size = strlen(entry.receipt) + 1;
+    }
     int str_size = (int)(desc_size + receipt_size);
     Entry * ret_entry = (Entry*)calloc(1, (sizeof(Entry)) + str_size); 
     *ret_entry = entry;
@@ -22,7 +28,7 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
         if (i > str_size) {
             log_err("Allocation mismatch while copying entry.desc to ret_entry->desc");
         }
-        if (entry.desc[i] == '\0') {
+        if (entry.desc[i] == '\0' || '\n') {
             ret_entry->strings[i] = '\0';
             ++i;
             break;
@@ -36,7 +42,7 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
         if (i > str_size) {
             log_err("Allocation mismatch while copying entry.receipt to ret_entry->receipt");
         }
-        if (entry.receipt[j] == '\0') {
+        if (entry.receipt[j] == '\0' || '\n') {
             ret_entry->strings[i] = '\0';
             break;
         }
@@ -52,15 +58,18 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
     LedgerNode *ledger_node = (LedgerNode *)calloc(1, sizeof(LedgerNode));
     ledger_node->entry = ret_entry;
     LedgerNode *comp_node = ledger->head;
-
+    time_t new_time = 0;
+    time_t comp_time = 0;
     if (comp_node == NULL) { // if head is null
         ledger->head = ledger_node;
         ledger->tail = ledger_node;
         ledger->curr = ledger_node;
+        comp_node = NULL;
+    } else {
+        new_time = mktime(&entry.date);
+        comp_time = mktime(&(comp_node->entry->date));
     }
 
-    time_t new_time = mktime(&entry.date);
-    time_t comp_time = mktime(&(comp_node->entry->date));
     while (comp_node != NULL) {
         if (comp_node->next == NULL) {
             comp_node->next = ledger_node;
