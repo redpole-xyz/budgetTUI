@@ -34,6 +34,7 @@ bool menu(Ledger *ledger) {
     printf("\033[H\033[J");
     printf("Menu:\n");
     printf("create new entry (n/new)\n");
+    printf("print entries    (ls/list)\n");
     printf("exit program     (q/quit)\n");
     char str[256];
     if(fgets(str, 256, stdin) == NULL) {
@@ -59,21 +60,50 @@ bool menu(Ledger *ledger) {
 }
 
 void list_entries(Ledger *ledger) {
-    printf("\033[H\033[J");
-    printf("| ### | Date       | Category  | Amount   | Description\n");
-    printf("|-----|------------|-----------|----------|-------------\n");
-    ledger->curr = ledger -> head;
     int i = 0;
-    while(ledger->curr != NULL && i < 100) {
-        print_entry_line(ledger->curr->entry, i);
-        ledger->curr = ledger->curr->next;
-        i++;
-    } 
-    if (i >= 100) {
-        printf("\n Previous(p) Next(n)\n");
-        printf("TODO!!!");
+    char ans;
+    while(i >= 0) {
+        printf("\033[H\033[J");
+        printf("| ### | Date       | Category  | Amount   | Description\n");
+        printf("|-----|------------|-----------|----------|-------------\n");
+        if (ledger->head == NULL) {
+            printf("\nPress enter to continue: ");
+            i = -1;
+            getchar();
+            break;
+        }
+        ledger->curr = ledger->head;
+        while(1) {
+            print_entry_line(ledger->curr->entry, i);
+            ledger->curr = ledger->curr->next;
+            i++;
+            if (ledger->curr == NULL) {
+                printf("\nPress enter to continue: ");
+                i = -1;
+                getchar();
+                break;
+            }
+            if (i > 49) {
+                printf("\n Previous(p) Next(n)\n");
+                ans = getchar();
+                if (ans == 'n') {
+                    i = 0;
+                    break;
+                } else if (ans == 'p') {
+                    for (i = 49; i > 0; --i) {
+                        ledger->curr = ledger->curr->prev;
+                        if (ledger->curr == NULL) {
+                            log_err("Out of bounds while reversing list");
+                        }
+                    }
+                    break;
+                } else {
+                    i = -1;
+                    break;
+                }
+            }
+        } 
     }
-    getchar();
 }
 
 void new_entry(Ledger *ledger) {
@@ -95,17 +125,20 @@ void new_entry(Ledger *ledger) {
     // Get category
     while (1) {
         printf("Category menu\n"); 
-        printf("0: Housing\n");
-        printf("1: Groceries\n");
-        printf("2: Transit\n");
-        printf("3: Recurring\n");
-        printf("4: Shopping\n");
-        printf("5: Social\n");
-        printf("6: Projects\n");
+        printf("1: Housing\n");
+        printf("2: Groceries\n");
+        printf("3: Transit\n");
+        printf("4: Recurring\n");
+        printf("5: Shopping\n");
+        printf("6: Social\n");
+        printf("7: Projects\n");
         printf("Select a category: \n");
-        scanf("%d", &entry.category);
-        getchar();
-        if (entry.category >= 0 && entry.category <= 6) {
+        if (fgets(str, 256, stdin) == NULL) {
+            log_err("Bad input (Catalog selection)");
+        } else {
+            entry.category = atoi(str);
+        }
+        if (entry.category >= 1 && entry.category <= 7) {
             break;
         } else {
             printf("Invalid entry\n");
@@ -114,7 +147,7 @@ void new_entry(Ledger *ledger) {
     // Get date
     while (1) {
         printf("Press ENTER for today's date\n");
-        printf("Format: YY-MM-DD (dashes optional)\n");
+        printf("Format: YYYY-MM-DD (dashes optional)\n");
         if (fgets(str, 256, stdin) == NULL) {
             log_err("bad input");
         }
@@ -123,7 +156,7 @@ void new_entry(Ledger *ledger) {
         if (str[0] == '\n') {
             break;
         }
-        if (strptime(str, "%d", &entry.date) != NULL) {
+        if (strlen(str) <= 3 && strptime(str, "%d", &entry.date) != NULL) {
             break;
         }
         if (strptime(str, "%Y-%m-%d", &entry.date) != NULL) {

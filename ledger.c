@@ -69,23 +69,38 @@ LedgerNode * ledger_add(Ledger *ledger, Entry entry) {
         new_time = mktime(&entry.date);
         comp_time = mktime(&(comp_node->entry->date));
     }
-
+    int past_head = 0;
     while (comp_node != NULL) {
+        if (new_time >= comp_time) {
+            if (past_head == 0) {
+                ledger->head = ledger_node;
+            } else {
+                ledger_node->prev = comp_node->prev;
+                comp_node->prev->next = ledger_node;
+            }
+            ledger_node->next = comp_node;
+            comp_node->prev = ledger_node;
+            break;
+        }
         if (comp_node->next == NULL) {
             comp_node->next = ledger_node;
+            ledger_node->prev = comp_node;
+            ledger->tail = ledger_node;
             break;
-        } 
-        if (new_time > comp_time) {
-            ledger_node->next = comp_node;
-            ledger_node->prev = comp_node->prev;
-            comp_node->prev = ledger_node;
         }
+        past_head = 1;
         comp_node = comp_node->next;
         comp_time = mktime(&(comp_node->entry->date));
     }
     ledger->node_count += 1;
     if (ledger->node_count < 0) {
         log_err("node_count less than 0");
+    }
+    if (ledger->head->prev != NULL) {
+        log_err("head prev not null (ledger.c)");
+    }
+    if (ledger->tail->next != NULL) {
+        log_err("tail next not null (ledger.c)");
     }
     return ledger_node;
 }

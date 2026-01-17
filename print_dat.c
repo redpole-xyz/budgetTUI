@@ -40,25 +40,25 @@ void print_entry_line(Entry *entry, int line_number) {
     printf("| %03d | ", line_number);
     printf("%04d-%02d-%02d | ", entry->date.tm_year + 1900, entry->date.tm_mon+1, entry->date.tm_mday);
     switch (entry->category) {
-        case 0:
+        case 1:
             printf("Housing   | ");
             break;
-        case 1:
+        case 2:
             printf("Groceries | ");
             break;
-        case 2:
+        case 3:
             printf("Transit   | ");
             break;
-        case 3:
+        case 4:
             printf("Recurring | ");
             break;
-        case 4:
+        case 5:
             printf("Shopping  | ");
             break;
-        case 5:
+        case 6:
             printf("Social    | ");
             break;
-        case 6:
+        case 7:
             printf("Projects  | ");
             break;
     }
