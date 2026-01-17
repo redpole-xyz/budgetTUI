@@ -29,6 +29,7 @@ CommandParse parse_command(char *cmd) {
 
 void new_entry(Ledger *ledger);
 void list_entries(Ledger *ledger);
+void delete_entry(Ledger *ledger);
 
 bool menu(Ledger *ledger) {
     printf("\033[H\033[J");
@@ -60,8 +61,10 @@ bool menu(Ledger *ledger) {
 }
 
 void list_entries(Ledger *ledger) {
+#define LIST_SIZE 50
     int i = 0;
-    char ans;
+    char ans[256];
+    LedgerNode *node_ptr_list[LIST_SIZE] = {0};
     while(i >= 0) {
         printf("\033[H\033[J");
         printf("| ### | Date       | Category  | Amount   | Description\n");
@@ -73,24 +76,45 @@ void list_entries(Ledger *ledger) {
             break;
         }
         ledger->curr = ledger->head;
+        int sel;
+        // TODO 1000% error with how list size is handled
         while(1) {
             print_entry_line(ledger->curr->entry, i);
+            if (i >= LIST_SIZE) log_err("node_ptr_list i out of range"); 
+            node_ptr_list[i] = ledger->curr;
             ledger->curr = ledger->curr->next;
             i++;
             if (ledger->curr == NULL) {
-                printf("\nPress enter to continue: ");
+                printf("\nPress ENTER to exit\n");
+                printf("\nEnter d ${num} to delete entry\n");
                 i = -1;
-                getchar();
-                break;
+                if(fgets(ans, 256, stdin) == NULL) {
+                    log_err("Parse error in list_entries");
+                }
+                if (ans[0] == 'd' && ans[1] == ' ') {
+                    sel = atoi(ans + 2);
+                    ledger_del(ledger, node_ptr_list[sel]);
+                } else {
+                    break;
+                }
             }
-            if (i > 49) {
+            if (i > LIST_SIZE) { // TODO TEST THIS
+                printf("\nPress ENTER to exit\n");
+                printf("\nEnter d to delete entry\n");
                 printf("\n Previous(p) Next(n)\n");
-                ans = getchar();
-                if (ans == 'n') {
+                if(fgets(ans, 256, stdin) == NULL) {
+                    log_err("Parse error in list_entries");
+                }
+                if (ans[0] == 'd' && ans[1] == ' ') {
+                    sel = atoi(ans + 2);
+                    ledger_del(ledger, node_ptr_list[sel]);
+                    break;
+                }
+                if (ans[0] == 'n') {
                     i = 0;
                     break;
-                } else if (ans == 'p') {
-                    for (i = 49; i > 0; --i) {
+                } else if (ans[0] == 'p') {
+                    for (i = LIST_SIZE; i > 0; --i) { // This might be messed up
                         ledger->curr = ledger->curr->prev;
                         if (ledger->curr == NULL) {
                             log_err("Out of bounds while reversing list");
@@ -197,3 +221,4 @@ void new_entry(Ledger *ledger) {
     }
     free(str);
 }
+
