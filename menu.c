@@ -141,7 +141,8 @@ void new_entry(Ledger *ledger) {
         if (entry.category >= 1 && entry.category <= 7) {
             break;
         } else {
-            printf("Invalid entry\n");
+            printf("\033[H\033[J");
+            printf("Invalid entry\n\n");
         }
     }
     // Get date
