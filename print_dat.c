@@ -5,25 +5,25 @@ void print_entry(Entry *entry) {
     printf("%04d-%02d-%02d\n", entry->date.tm_year + 1900, entry->date.tm_mon+1, entry->date.tm_mday);
     switch (entry->category) {
         case 1:
-            printf("Housing   | ");
+            printf("Housing");
             break;
         case 2:
-            printf("Groceries | ");
+            printf("Groceries");
             break;
         case 3:
-            printf("Transit   | ");
+            printf("Transit");
             break;
         case 4:
-            printf("Recurring | ");
+            printf("Recurring");
             break;
         case 5:
-            printf("Shopping  | ");
+            printf("Shopping");
             break;
         case 6:
-            printf("Social    | ");
+            printf("Social");
             break;
         case 7:
-            printf("Projects  | ");
+            printf("Projects");
             break;
     }
     printf("\n");
